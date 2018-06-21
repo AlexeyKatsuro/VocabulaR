@@ -10,15 +10,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,7 +47,7 @@ public class TranslateAPI {
             .appendQueryParameter("key", API_KEY)
             .build();
 
-    public String translate(String text, String sourceLang,String targetLang) {
+    public TranslateResult translate(String text, String sourceLang,String targetLang) {
 
         try {
             String url = ENDPOINT.buildUpon()
@@ -69,7 +65,7 @@ public class TranslateAPI {
 
             TranslateResult result = new Gson().fromJson(jsonStr,TranslateResult.class);
 
-            return result.getTranslation().get(0);
+            return result;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -77,14 +73,43 @@ public class TranslateAPI {
         return null;
     }
 
-    private String parseText(JSONObject jsonBody)
-            throws IOException, JSONException {
+    public LangsResult getLangs(String system_lang) throws IOException {
+        if (system_lang == null) {
+            system_lang = "en";
+        }
+        String url = ENDPOINT.buildUpon()
+                .appendEncodedPath("getLangs")
+                .appendQueryParameter("ui", system_lang)
+                .build().toString();
+        Log.d(TAG, "URL:" + url);
+        String langs = getUrlString(url);
+        Log.d(TAG, "JSON: " + langs);
 
-        JSONArray jsonArray = jsonBody.getJSONArray("text");
-        String string = jsonArray.getString(0);
-        return string;
+        LangsResult result = new Gson().fromJson(langs, LangsResult.class);
+
+        return result;
     }
-//
+
+
+    public String detectLanguage(String text) throws IOException {
+        String url = ENDPOINT.buildUpon()
+                .appendEncodedPath("detect")
+                .appendQueryParameter("text",text)
+                .build().toString();
+        String response = getUrlString(url);
+        return response.substring(response.indexOf("lang")+7, response.length()-2);
+    }
+
+    public String getKey(Map<String, String> map, String value) {
+
+        for (String key : map.keySet()) {
+            if (map.get(key).equalsIgnoreCase(value)) {
+                return key;
+            }
+        }
+        return null;
+    }
+
     public byte[] getUrlBytes(String urlSpec) throws IOException {
         URL url = new URL(urlSpec);
         HttpURLConnection connection = (HttpURLConnection)url.openConnection();
@@ -112,57 +137,11 @@ public class TranslateAPI {
     }
 
 
-
-    private String request(String URL) throws IOException {
-        URL url = new URL(URL);
-        URLConnection urlConn = url.openConnection();
-        urlConn.addRequestProperty("User-Agent", "Mozilla");
-
-        InputStream inStream = urlConn.getInputStream();
-
-        String recieved = new BufferedReader(new InputStreamReader(inStream)).readLine();
-
-        inStream.close();
-        return recieved;
-    }
-
-    public Map<String, String> getLangs(String system_lang) throws IOException {
-        if (system_lang==null){
-            system_lang = "en";
-        }
-        String url = ENDPOINT.buildUpon()
-                .appendEncodedPath("getLangs")
-                .appendQueryParameter("ui", system_lang)
-                .build().toString();
-        Log.d(TAG,"URL:" + url);
-        String langs = getUrlString(url);
-        Log.d(TAG,"JSON: " +langs);
-
-        LangsResult result = new Gson().fromJson(langs,LangsResult.class);
-
-        return result.getLangs();
-    }
-
-
-    public String detectLanguage(String text) throws IOException {
-        String response = request("https://translate.yandex.net/api/v1.5/tr.json/detect?key=" + API_KEY + "&text=" + text);
-        return response.substring(response.indexOf("lang")+7, response.length()-2);
-    }
-
-    public String getKey(Map<String, String> map, String value) {
-        for (String key : map.keySet()) {
-            if (map.get(key).equalsIgnoreCase(value)) {
-                return key;
-            }
-        }
-        return null;
-    }
-
     public class TranslateResult {
         @SerializedName("code")
         private int code;
         @SerializedName("lang")
-        private String mDeraction;
+        private String mDirection;
         @SerializedName("text")
         private List<String> mTranslation;
 
@@ -178,12 +157,12 @@ public class TranslateAPI {
             this.code = code;
         }
 
-        public String getDeraction() {
-            return mDeraction;
+        public String getDirection() {
+            return mDirection;
         }
 
-        public void setDeraction(String deraction) {
-            mDeraction = deraction;
+        public void setDirection(String direction) {
+            mDirection = direction;
         }
 
         public List<String> getTranslation() {
@@ -197,7 +176,7 @@ public class TranslateAPI {
 
     public class LangsResult {
         @SerializedName("dirs")
-        List<String> mDiractions;
+        List<String> mDirections;
 
         @SerializedName("langs")
         Map<String,String> mLangs;
@@ -205,12 +184,12 @@ public class TranslateAPI {
         public LangsResult() {
         }
 
-        public List<String> getDiractions() {
-            return mDiractions;
+        public List<String> getDirections() {
+            return mDirections;
         }
 
-        public void setDiractions(List<String> diractions) {
-            mDiractions = diractions;
+        public void setDirections(List<String> directions) {
+            mDirections = directions;
         }
 
         public Map<String, String> getLangs() {
@@ -221,4 +200,6 @@ public class TranslateAPI {
             mLangs = langs;
         }
     }
+
+
 }

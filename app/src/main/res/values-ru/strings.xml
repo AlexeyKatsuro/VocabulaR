@@ -6,4 +6,14 @@
         <item>Английский</item>
         <item>Русский</item>
     </array>
+    
+    <string name="success">Операция выполнена успешно</string>
+    <string name="invalid_api_key">Неправильный API-ключ</string>
+    <string name="blocked_api_key">API-ключ заблокирован</string>
+    <string name="exceeded_daily_limit">Превышено суточное ограничение на объем переведенного текста</string>
+    <string name="exceeded_max_text_size">Превышен максимально допустимый размер текста</string>
+    <string name="text_format_error">Текст не может быть переведен</string>
+    <string name="transation_direction_error">Заданное направление перевода не поддерживается</string>
+    <string name="unknown_error">Неизвестная ошибка</string>
+
 </resources>

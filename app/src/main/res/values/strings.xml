@@ -8,4 +8,14 @@
         <item>English</item>
         <item>Russian</item>
     </array>
+
+    <string name="success">Operation completed successfully</string>
+    <string name="invalid_api_key">Invalid API key</string>
+    <string name="blocked_api_key">Blocked API key</string>
+    <string name="exceeded_daily_limit">Exceeded the daily limit on the amount of translated text</string>
+    <string name="exceeded_max_text_size">Exceeded the maximum text size</string>
+    <string name="text_format_error">The text cannot be translated</string>
+    <string name="transation_direction_error">The specified translation direction is not supported</string>
+    <string name="unknown_error">Unknown error</string>
+
 </resources>

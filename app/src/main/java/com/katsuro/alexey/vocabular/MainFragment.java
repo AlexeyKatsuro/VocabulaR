@@ -23,6 +23,7 @@ import com.katsuro.alexey.vocabular.API.API_KEYS;
 import com.katsuro.alexey.vocabular.API.TranslateAPI;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -194,25 +195,56 @@ public class MainFragment extends Fragment implements VocalizerListener {
 
         @Override
         protected String doInBackground(String... strings) {
-            try {
-            if(mLangs==null){
-               mLangs = new TranslateAPI().getLangs(getString(R.string.system_lang));
-               if(mLangs==null){
-                   return null;
-               }
-               Log.d(TAG,"LANGS: " + mLangs.toString());
-            }
 
-            String text = strings[0];
-            String sourceLangKey = new TranslateAPI().getKey(mLangs,strings[1]);
-            String targetLangKey = new TranslateAPI().getKey(mLangs,strings[2]);
-            String output =  new TranslateAPI().translate(text,sourceLangKey,targetLangKey);
+            String output = null;
+            try {
+                if (mLangs == null) {
+                    String systemLang = Locale.getDefault().getDisplayLanguage();
+                    ;
+                    TranslateAPI.LangsResult langsResult = new TranslateAPI().getLangs(systemLang);
+                    mLangs = langsResult.getLangs();
+                    if (mLangs == null) {
+                        return null;
+                    }
+                    Log.d(TAG, "LANGS: " + mLangs.toString());
+                }
+
+                String text = strings[0];
+                String sourceLangKey = new TranslateAPI().getKey(mLangs, strings[1]);
+                String targetLangKey = new TranslateAPI().getKey(mLangs, strings[2]);
+                TranslateAPI.TranslateResult translateResult = new TranslateAPI().translate(text, sourceLangKey, targetLangKey);
+
+                if(translateResult.getCode() == TranslateAPI.Codes.SUCCESS){
+                    output = translateResult.getTranslation().get(0);
+                } else {
+                    output = getMessage(translateResult.getCode());
+                }
+
                 return output;
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            return null;
+            return output;
+        }
+
+        private String getMessage(int code) {
+            switch (code){
+                case TranslateAPI.Codes.BLOCKED_API_KEY:
+                    return getString(R.string.blocked_api_key);
+                case TranslateAPI.Codes.INVALID_API_KEY:
+                    return getString(R.string.invalid_api_key);
+                case TranslateAPI.Codes.EXCEEDED_DAILY_LIMIT:
+                    return getString(R.string.exceeded_daily_limit);
+                case TranslateAPI.Codes.EXCEEDED_MAX_TEXT_SIZE:
+                    return getString(R.string.exceeded_max_text_size);
+                case TranslateAPI.Codes.TRANSLATION_DIRECTION_ERROR:
+                    return getString(R.string.transation_direction_error);
+                case TranslateAPI.Codes.TEXT_FORMAT_ERROR:
+                    return getString(R.string.text_format_error);
+                default:
+                    return getString(R.string.unknown_error);
+            }
         }
 
         @Override
