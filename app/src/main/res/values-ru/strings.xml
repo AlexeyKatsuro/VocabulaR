@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">TestYandexAPI</string>
+
+    <string name="system_lang">ru</string>
+    <array name="langs">
+        <item>Английский</item>
+        <item>Русский</item>
+    </array>
+</resources>

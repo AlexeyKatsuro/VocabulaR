@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <include layout="@layout/langs_bar"
+        android:id="@+id/langs_bar"/>
+    <LinearLayout
+        android:layout_below="@+id/langs_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/linearLayout">
+        <EditText
+            android:id="@+id/edit_text"
+            android:layout_width="0dp"
+            android:layout_weight="0.4"
+            android:layout_height="wrap_content" />
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_weight="0.1"
+            android:layout_height="wrap_content">
+            <ImageButton
+                android:id="@+id/translate_button"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:src="@android:drawable/ic_media_play"/>
+            <ProgressBar
+                android:id="@+id/progress"
+                android:visibility="invisible"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"/>
+        </FrameLayout>
+        <TextView
+            android:id="@+id/translated_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.4"/>
+    </LinearLayout>
+
+</RelativeLayout>

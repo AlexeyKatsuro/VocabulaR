@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">VocabulaR</string>
+    <string name="ru_en">ru-en</string>
+    <string name="en_ru">en-ru</string>
+
+    <string name="system_lang">en</string>
+    <array name="langs">
+        <item>English</item>
+        <item>Russian</item>
+    </array>
+</resources>
