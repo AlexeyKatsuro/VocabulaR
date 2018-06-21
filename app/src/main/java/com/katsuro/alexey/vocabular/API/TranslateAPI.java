@@ -3,6 +3,9 @@ package com.katsuro.alexey.vocabular.API;
 import android.net.Uri;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,6 +19,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -63,10 +67,9 @@ public class TranslateAPI {
             jsonStr = getUrlString(url);
             Log.d(TAG,"JSON: " + jsonStr);
 
+            TranslateResult result = new Gson().fromJson(jsonStr,TranslateResult.class);
 
-            return parseText(new JSONObject(jsonStr));
-        } catch (JSONException e) {
-            e.printStackTrace();
+            return result.getTranslation().get(0);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -131,24 +134,13 @@ public class TranslateAPI {
                 .appendEncodedPath("getLangs")
                 .appendQueryParameter("ui", system_lang)
                 .build().toString();
-        Log.d(TAG,url);
+        Log.d(TAG,"URL:" + url);
         String langs = getUrlString(url);
-        Log.d(TAG,langs);
-        langs = langs.substring(langs.indexOf("langs")+7);
-        langs = langs.substring(0, langs.length()-1);
+        Log.d(TAG,"JSON: " +langs);
 
-        String[] splitLangs = langs.split(",");
+        LangsResult result = new Gson().fromJson(langs,LangsResult.class);
 
-        Map<String, String> languages = new HashMap<String, String>();
-        for (String s : splitLangs) {
-            String[] s2 = s.split(":");
-
-            String key = s2[0].substring(1, s2[0].length()-1);
-            String value = s2[1].substring(1, s2[1].length()-1);
-
-            languages.put(key, value);
-        }
-        return languages;
+        return result.getLangs();
     }
 
 
@@ -164,5 +156,69 @@ public class TranslateAPI {
             }
         }
         return null;
+    }
+
+    public class TranslateResult {
+        @SerializedName("code")
+        private int code;
+        @SerializedName("lang")
+        private String mDeraction;
+        @SerializedName("text")
+        private List<String> mTranslation;
+
+        public TranslateResult() {
+
+        }
+
+        public int getCode() {
+            return code;
+        }
+
+        public void setCode(int code) {
+            this.code = code;
+        }
+
+        public String getDeraction() {
+            return mDeraction;
+        }
+
+        public void setDeraction(String deraction) {
+            mDeraction = deraction;
+        }
+
+        public List<String> getTranslation() {
+            return mTranslation;
+        }
+
+        public void setTranslation(List<String> translation) {
+            mTranslation = translation;
+        }
+    }
+
+    public class LangsResult {
+        @SerializedName("dirs")
+        List<String> mDiractions;
+
+        @SerializedName("langs")
+        Map<String,String> mLangs;
+
+        public LangsResult() {
+        }
+
+        public List<String> getDiractions() {
+            return mDiractions;
+        }
+
+        public void setDiractions(List<String> diractions) {
+            mDiractions = diractions;
+        }
+
+        public Map<String, String> getLangs() {
+            return mLangs;
+        }
+
+        public void setLangs(Map<String, String> langs) {
+            mLangs = langs;
+        }
     }
 }
