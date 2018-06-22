@@ -7,6 +7,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -19,10 +21,15 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.katsuro.alexey.vocabular.API.API_KEYS;
 import com.katsuro.alexey.vocabular.API.TranslateAPI;
+import com.katsuro.alexey.vocabular.DataBase.VocabDBHelper;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -52,12 +59,22 @@ public class MainFragment extends Fragment implements VocalizerListener {
 
     private EditText mEditText;
     private ProgressBar mProgressBar;
-    private TextView mTextView;
+    private TextView mOutputTextView;
     private ImageButton mTranslateButton;
+    private ImageButton mReproduceButton;
+    private ImageButton mAddButton;
+
+    private RecyclerView mRecyclerView;
+    private WordsAdapter mAdapter;
+    private List<Word> mWordList;
+    private String mCurrendDirection;
 
     private Map<String, String> mLangs;
     private OnlineVocalizer mVocalizer;
     private String API_KEY = API_KEYS.SPEECHKIT;
+
+    private VocabDBHelper mHelper;
+    private FileWriterReader mFileWriterReader;
 
     public static MainFragment newInstance() {
 
@@ -81,7 +98,9 @@ public class MainFragment extends Fragment implements VocalizerListener {
             //do not ignore in a real app!
             ex.printStackTrace();
         }
-
+        mFileWriterReader = new FileWriterReader(getActivity());
+        mHelper =new VocabDBHelper(getActivity());
+        mWordList = mHelper.getAllWords();
 
 
     }
@@ -93,11 +112,34 @@ public class MainFragment extends Fragment implements VocalizerListener {
         mEditText = view.findViewById(R.id.edit_text);
         mTranslateButton = view.findViewById(R.id.translate_button);
         mProgressBar = view.findViewById(R.id.progress);
-        mTextView = view.findViewById(R.id.translated_text);
-        mTextView.setOnClickListener(new View.OnClickListener() {
+        mOutputTextView = view.findViewById(R.id.translated_text);
+        mReproduceButton = view.findViewById(R.id.reproduce);
+        mAddButton = view.findViewById(R.id.add);
+
+        mAddButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Word word = new Word();
+                String sourceLang = String.valueOf(mSourceSpinner.getSelectedItem());
+                String targetLang = String.valueOf(mTargetSpinner.getSelectedItem());
+                if((sourceLang+"-"+targetLang).equals("en-ru")){
+                    word.setSourceText(mEditText.getText().toString());
+                    word.setTargetText(mOutputTextView.getText().toString());
+                    word.setDate(new Date());
+                } else {
+                    word.setTargetText(mEditText.getText().toString());
+                    word.setSourceText(mOutputTextView.getText().toString());
+                    word.setDate(new Date());
+                }
+                mHelper.addWord(word);
+                updateUI();
+            }
+        });
+
+        mReproduceButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String text = mTextView.getText().toString();
+                String text = mOutputTextView.getText().toString();
                 if(text !=null && !text.equals("") ){
                     Language language = String.valueOf(mTargetSpinner.getSelectedItem()).equals("English") ? Language.ENGLISH : Language.RUSSIAN;
                     mVocalizer = new OnlineVocalizer.Builder(language,MainFragment.this)
@@ -126,13 +168,13 @@ public class MainFragment extends Fragment implements VocalizerListener {
             public void onClick(View view) {
 
 
-                String mSourceLang = String.valueOf(mSourceSpinner.getSelectedItem());
-                String mTargetLang = String.valueOf(mTargetSpinner.getSelectedItem());
+                String sourceLang = String.valueOf(mSourceSpinner.getSelectedItem());
+                String targetLang = String.valueOf(mTargetSpinner.getSelectedItem());
 
-                Log.d(TAG,"s: "+ mSourceLang);
-                Log.d(TAG,"t: "+ mTargetLang);
+                Log.d(TAG,"s: "+ sourceLang);
+                Log.d(TAG,"t: "+ targetLang);
                 String text = mEditText.getText().toString();
-                new TranslateTask().execute(text, mSourceLang,mTargetLang);
+                new TranslateTask().execute(text, sourceLang,targetLang);
             }
         });
 
@@ -150,13 +192,29 @@ public class MainFragment extends Fragment implements VocalizerListener {
             }
         });
 
+        mRecyclerView = view.findViewById(R.id.word_list);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        updateUI();
         return view;
+    }
+
+    private void updateUI() {
+        mWordList = mHelper.getAllWords();
+        if(mAdapter==null){
+            mAdapter = new WordsAdapter(mWordList);
+            mRecyclerView.setAdapter(mAdapter);
+        }else {
+            mAdapter.setWordList(mWordList);
+            mAdapter.notifyDataSetChanged();
+        }
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.menu_main,menu);
+
 
     }
 
@@ -202,6 +260,12 @@ public class MainFragment extends Fragment implements VocalizerListener {
                     String systemLang = Locale.getDefault().getDisplayLanguage();
                     ;
                     TranslateAPI.LangsResult langsResult = new TranslateAPI().getLangs(systemLang);
+
+                    String jsonLangs = new Gson().toJson(langsResult, TranslateAPI.LangsResult.class);
+                    mFileWriterReader.saveFileInInternalStorage("Langs.txt",jsonLangs);
+
+                    String json1 = mFileWriterReader.readFileInInternalStorage("Langs.txt");
+
                     mLangs = langsResult.getLangs();
                     if (mLangs == null) {
                         return null;
@@ -212,6 +276,7 @@ public class MainFragment extends Fragment implements VocalizerListener {
                 String text = strings[0];
                 String sourceLangKey = new TranslateAPI().getKey(mLangs, strings[1]);
                 String targetLangKey = new TranslateAPI().getKey(mLangs, strings[2]);
+                mCurrendDirection = sourceLangKey + "-" + targetLangKey;
                 TranslateAPI.TranslateResult translateResult = new TranslateAPI().translate(text, sourceLangKey, targetLangKey);
 
                 if(translateResult.getCode() == TranslateAPI.Codes.SUCCESS){
@@ -258,7 +323,7 @@ public class MainFragment extends Fragment implements VocalizerListener {
         protected void onPostExecute(String s) {
             mProgressBar.setVisibility(View.INVISIBLE);
             mTranslateButton.setVisibility(View.VISIBLE);
-            mTextView.setText(s);
+            mOutputTextView.setText(s);
         }
 
     }
@@ -280,6 +345,58 @@ public class MainFragment extends Fragment implements VocalizerListener {
             }
         }
     }
+
+    private class WordsHolder extends RecyclerView.ViewHolder{
+        private TextView mSourceTextView;
+        private TextView mTargetTextView;
+        private Word mWord;
+
+        public WordsHolder(View itemView) {
+            super(itemView);
+            mSourceTextView = itemView.findViewById(R.id.source_text);
+            mTargetTextView = itemView.findViewById(R.id.target_text);
+        }
+
+        private void bindWord(Word word){
+            mWord = word;
+            mSourceTextView.setText(word.getSourceText());
+            mTargetTextView.setText(mWord.getTargetText());
+        }
+    }
+
+    private class WordsAdapter extends RecyclerView.Adapter<WordsHolder>{
+        private List<Word> mWordList = new ArrayList<>();
+
+        public WordsAdapter(List<Word> wordList) {
+            mWordList = wordList;
+        }
+
+        @Override
+        public WordsHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view= LayoutInflater.from(getActivity()).inflate(R.layout.vocab_list_item,parent,false);
+            return new WordsHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(WordsHolder holder, int position) {
+            Word word = mWordList.get(position);
+            holder.bindWord(word);
+        }
+
+        @Override
+        public int getItemCount() {
+            return mWordList.size();
+        }
+
+        public List<Word> getWordList() {
+            return mWordList;
+        }
+
+        public void setWordList(List<Word> wordList) {
+            mWordList = wordList;
+        }
+    }
+
 
 
 }

@@ -35,7 +35,33 @@
             android:id="@+id/translated_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.4"/>
+            android:layout_weight="0.3"/>
+
+        <LinearLayout
+            android:id="@+id/actions"
+            android:orientation="vertical"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.1">
+            <ImageButton
+                android:id="@+id/reproduce"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:src="@drawable/ic_action_reproduce"/>
+            <ImageButton
+                android:id="@+id/add"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:src="@drawable/ic_action_add"/>
+        </LinearLayout>
     </LinearLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/word_list"
+        android:layout_below="@id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
 </RelativeLayout>
