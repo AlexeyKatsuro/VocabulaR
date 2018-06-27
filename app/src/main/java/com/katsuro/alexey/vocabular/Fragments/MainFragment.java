@@ -1,4 +1,4 @@
-package com.katsuro.alexey.vocabular;
+package com.katsuro.alexey.vocabular.Fragments;
 
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -25,6 +25,9 @@ import com.google.gson.Gson;
 import com.katsuro.alexey.vocabular.API.API_KEYS;
 import com.katsuro.alexey.vocabular.API.TranslateAPI;
 import com.katsuro.alexey.vocabular.DataBase.VocabDBHelper;
+import com.katsuro.alexey.vocabular.FileWriterReader;
+import com.katsuro.alexey.vocabular.R;
+import com.katsuro.alexey.vocabular.Word;
 
 import java.io.IOException;
 import java.util.ArrayList;

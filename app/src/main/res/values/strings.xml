@@ -17,5 +17,10 @@
     <string name="text_format_error">The text cannot be translated</string>
     <string name="transation_direction_error">The specified translation direction is not supported</string>
     <string name="unknown_error">Unknown error</string>
+    <string name="choose_a_direction">Choose a translation direction of dictionary</string>
+
+    <string name="source_hint">Studied</string>
+    <string name="target_hint">Native</string>
+    <string name="internet_necessity">You must have an Internet connection</string>
 
 </resources>

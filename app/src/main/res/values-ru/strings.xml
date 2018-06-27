@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TestYandexAPI</string>
+    <string name="app_name">VocabulaR</string>
 
     <string name="system_lang">ru</string>
     <array name="langs">
@@ -15,5 +15,10 @@
     <string name="text_format_error">Текст не может быть переведен</string>
     <string name="transation_direction_error">Заданное направление перевода не поддерживается</string>
     <string name="unknown_error">Неизвестная ошибка</string>
+
+    <string name="choose_a_direction">Выберите направление перевода словаря</string>
+    <string name="source_hint">Изучаемый</string>
+    <string name="target_hint">Родной</string>
+    <string name="internet_necessity">Необходимо  установить интернет соединение</string>
 
 </resources>
