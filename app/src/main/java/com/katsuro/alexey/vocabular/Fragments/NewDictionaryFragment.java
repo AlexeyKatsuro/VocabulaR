@@ -1,7 +1,9 @@
 package com.katsuro.alexey.vocabular.Fragments;
 
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -26,6 +28,8 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 import com.katsuro.alexey.vocabular.API.API_KEYS;
 import com.katsuro.alexey.vocabular.API.TranslateAPI;
+import com.katsuro.alexey.vocabular.DataBase.DictionaryProvider;
+import com.katsuro.alexey.vocabular.DataBase.VocabDBHelper;
 import com.katsuro.alexey.vocabular.Dictionary;
 import com.katsuro.alexey.vocabular.FileWriterReader;
 import com.katsuro.alexey.vocabular.R;
@@ -33,9 +37,10 @@ import com.katsuro.alexey.vocabular.R;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 
 import ru.yandex.speechkit.SpeechKit;
@@ -44,9 +49,11 @@ import ru.yandex.speechkit.SpeechKit;
  * Created by alexey on 6/22/18.
  */
 
-public class StartFragment  extends Fragment {
+public class NewDictionaryFragment extends Fragment {
 
-    private static final String TAG = StartFragment.class.getSimpleName();
+    private static final String TAG = NewDictionaryFragment.class.getSimpleName();
+    public static final String EXTRA_DICTIONARY = "extra_dictionary_json";
+
     private TextView mTitle;
     private TextView mDescription;
     private Spinner mSourceSpinner;
@@ -63,9 +70,12 @@ public class StartFragment  extends Fragment {
     private LangAdapter mLangAdapter;
     private String mSystemKeyLang;
     private Dictionary mDictionary;
+    private DictionaryProvider mProvider;
+    private String mDefaultName;
+    private ArrayList<Dictionary> mAllDictionaries;
 
-    public static StartFragment newInstance() {
-        StartFragment fragment = new StartFragment();
+    public static NewDictionaryFragment newInstance() {
+        NewDictionaryFragment fragment = new NewDictionaryFragment();
         return fragment;
     }
 
@@ -81,6 +91,9 @@ public class StartFragment  extends Fragment {
         }
 
         mFileWriterReader = new FileWriterReader(getActivity());
+        mProvider = new DictionaryProvider(new VocabDBHelper(getActivity()));
+        mAllDictionaries = mProvider.getAllDictionaries();
+        mDefaultName = getString(R.string.dictionary_num)+String.valueOf(mAllDictionaries.size()+1);
 
     }
 
@@ -88,7 +101,7 @@ public class StartFragment  extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Log.d(TAG,"onCreateView");
-        View view = inflater.inflate(R.layout.fragment_start,container,false);
+        View view = inflater.inflate(R.layout.fragment_new_dictionary,container,false);
         mTitle = view.findViewById(R.id.title);
         mVocabNameEditText = view.findViewById(R.id.vocab_name_edit_text);
         mDescription = view.findViewById(R.id.description);
@@ -102,21 +115,7 @@ public class StartFragment  extends Fragment {
         mCompleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String name = mVocabNameEditText.getText().toString();
-                String sourceLang = String.valueOf(mSourceSpinner.getSelectedItem());
-                String sourceKeyLang = TranslateAPI.getKey(mLangsAndDirs.getLangs(),sourceLang);
-
-                String targetLang = String.valueOf(mTargetSpinner.getSelectedItem());
-                String targetKeyLang = TranslateAPI.getKey(mLangsAndDirs.getLangs(),targetLang);
-
-                mDictionary =  new Dictionary();
-                mDictionary.setName(name);
-                mDictionary.setSourceKeyLang(sourceKeyLang);
-                mDictionary.setTargetKeyLang(targetKeyLang);
-                Toast.makeText(getActivity(),name,Toast.LENGTH_SHORT).show();
-                Toast.makeText(getActivity(),sourceKeyLang,Toast.LENGTH_SHORT).show();
-                Toast.makeText(getActivity(),targetKeyLang,Toast.LENGTH_SHORT).show();
-
+                complete();
             }
         });
         Typeface face= Typeface.createFromAsset(getActivity().getAssets(),"fonts/Purisa.ttf");
@@ -127,15 +126,55 @@ public class StartFragment  extends Fragment {
                 updateUI();
             }
         });
-        String defaultName = getString(R.string.Dictionary_num)+"1";
-        mVocabNameEditText.setText(defaultName);
-        mVocabNameEditText.setHint(defaultName);
+
+        mVocabNameEditText.setText(mDefaultName);
+        mVocabNameEditText.setHint(mDefaultName);
 
         updateUI();
 
         return view;
     }
 
+    private void complete() {
+        String name = mVocabNameEditText.getText().toString();
+        String sourceLang = String.valueOf(mSourceSpinner.getSelectedItem());
+        String sourceKeyLang = TranslateAPI.getKey(mLangsAndDirs.getLangs(), sourceLang);
+
+        String targetLang = String.valueOf(mTargetSpinner.getSelectedItem());
+        String targetKeyLang = TranslateAPI.getKey(mLangsAndDirs.getLangs(), targetLang);
+        String direction = sourceKeyLang + "-" + targetKeyLang;
+
+
+        mDictionary = new Dictionary();
+        mDictionary.setName(name);
+        mDictionary.setSourceLang(sourceLang);
+        mDictionary.setTargetLang(targetLang);
+        mDictionary.setDate(new Date());
+
+
+        if(mDictionary.getName() == null || mDictionary.getName().equals("") ) {
+            mDictionary.setName(mDefaultName);
+        }
+
+
+        for(Dictionary dictionary : mAllDictionaries){
+            if(mDictionary.getName().equals(dictionary.getName())){
+                Toast.makeText(getActivity(),R.string.busy_name,Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+
+        sendResult();
+    }
+
+    private void sendResult() {
+        Intent data = new Intent();
+        String jsonDictionary = new Gson().toJson(mDictionary);
+        data.putExtra(EXTRA_DICTIONARY,jsonDictionary);
+
+        getActivity().setResult(Activity.RESULT_OK,data);
+        getActivity().finish();
+    }
 
 
     private class DownloadLangList extends AsyncTask<String, Void, Boolean> {
@@ -201,6 +240,7 @@ public class StartFragment  extends Fragment {
             if(mLangAdapter==null) {
                 mLangsAndDirs = loadLangs();
                 List<String> langlist =  TranslateAPI.getValueList(mLangsAndDirs.getLangs());
+                Collections.sort(langlist);
                 mLangAdapter = new LangAdapter(getActivity(),langlist);
                 mSourceSpinner.setAdapter(mLangAdapter);
                 mTargetSpinner.setAdapter(mLangAdapter);
@@ -225,7 +265,7 @@ public class StartFragment  extends Fragment {
         return connected;
     }
 
-    private class LangAdapter extends ArrayAdapter<String>{
+    public static class LangAdapter extends ArrayAdapter<String>{
 
         private Context mContext;
         private List<String> mLangList = new ArrayList<>();

@@ -1,21 +1,25 @@
 package com.katsuro.alexey.vocabular;
 
+import java.util.Date;
+
 /**
  * Created by alexey on 6/28/18.
  */
 
 public class Dictionary {
     private String mName;
-    private String mSourceKeyLang;
-    private String mTargetKeyLang;
+    private String mSourceLang;
+    private String mTargetLang;
+    private Date mDate;
 
     public Dictionary() {
     }
 
-    public Dictionary(String name, String sourceKeyLang, String targetKeyLang) {
+    public Dictionary(String name, String sourceLang, String targetLang, Date date) {
         mName = name;
-        mSourceKeyLang = sourceKeyLang;
-        mTargetKeyLang = targetKeyLang;
+        mSourceLang = sourceLang;
+        mTargetLang = targetLang;
+        mDate = date;
     }
 
     public String getName() {
@@ -26,19 +30,27 @@ public class Dictionary {
         mName = name;
     }
 
-    public String getSourceKeyLang() {
-        return mSourceKeyLang;
+    public String getSourceLang() {
+        return mSourceLang;
     }
 
-    public void setSourceKeyLang(String sourceKeyLang) {
-        mSourceKeyLang = sourceKeyLang;
+    public void setSourceLang(String sourceLang) {
+        mSourceLang = sourceLang;
     }
 
-    public String getTargetKeyLang() {
-        return mTargetKeyLang;
+    public String getTargetLang() {
+        return mTargetLang;
     }
 
-    public void setTargetKeyLang(String targetKeyLang) {
-        mTargetKeyLang = targetKeyLang;
+    public void setTargetLang(String targetLang) {
+        mTargetLang = targetLang;
+    }
+
+    public Date getDate() {
+        return mDate;
+    }
+
+    public void setDate(Date date) {
+        mDate = date;
     }
 }

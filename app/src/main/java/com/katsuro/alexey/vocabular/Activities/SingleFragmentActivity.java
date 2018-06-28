@@ -1,4 +1,4 @@
-package com.katsuro.alexey.vocabular;
+package com.katsuro.alexey.vocabular.Activities;
 
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
@@ -7,9 +7,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.WindowManager;
 
-/**
- * Created by Alexey on 20.01.2018.
- */
+import com.katsuro.alexey.vocabular.R;
 
 public abstract class SingleFragmentActivity extends AppCompatActivity {
 

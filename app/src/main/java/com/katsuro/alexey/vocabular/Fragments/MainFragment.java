@@ -25,6 +25,7 @@ import com.google.gson.Gson;
 import com.katsuro.alexey.vocabular.API.API_KEYS;
 import com.katsuro.alexey.vocabular.API.TranslateAPI;
 import com.katsuro.alexey.vocabular.DataBase.VocabDBHelper;
+import com.katsuro.alexey.vocabular.DataBase.WordProvider;
 import com.katsuro.alexey.vocabular.FileWriterReader;
 import com.katsuro.alexey.vocabular.R;
 import com.katsuro.alexey.vocabular.Word;
@@ -69,15 +70,17 @@ public class MainFragment extends Fragment implements VocalizerListener {
 
     private RecyclerView mRecyclerView;
     private WordsAdapter mAdapter;
-    private List<Word> mWordList;
+    private List<Word> mWordList = new ArrayList<>();
     private String mCurrendDirection;
 
     private Map<String, String> mLangs;
     private OnlineVocalizer mVocalizer;
     private String API_KEY = API_KEYS.SPEECHKIT;
+    private String mLangsFilename  = "LangsAndDirs.txt";
 
     private VocabDBHelper mHelper;
     private FileWriterReader mFileWriterReader;
+    private WordProvider mWordProvider;
 
     public static MainFragment newInstance() {
 
@@ -102,10 +105,16 @@ public class MainFragment extends Fragment implements VocalizerListener {
             ex.printStackTrace();
         }
         mFileWriterReader = new FileWriterReader(getActivity());
-        mHelper =new VocabDBHelper(getActivity());
-        mWordList = mHelper.getAllWords();
+        mLangs = loadLangs().getLangs();
+//        mHelper =new VocabDBHelper(getActivity());
+//        mWordProvider = new WordProvider(mHelper,null);
+//        mWordList = mWordProvider.getAllWords();
 
 
+    }
+    private TranslateAPI.LangsResult loadLangs() {
+        String jsonLangs = mFileWriterReader.readFileInInternalStorage(mLangsFilename);
+        return new Gson().fromJson(jsonLangs,TranslateAPI.LangsResult.class);
     }
 
     @Nullable
@@ -134,7 +143,7 @@ public class MainFragment extends Fragment implements VocalizerListener {
                     word.setSourceText(mOutputTextView.getText().toString());
                     word.setDate(new Date());
                 }
-                mHelper.addWord(word);
+                mWordProvider.addWord(word);
                 updateUI();
             }
         });
@@ -182,9 +191,13 @@ public class MainFragment extends Fragment implements VocalizerListener {
         });
 
         mSourceSpinner = view.findViewById(R.id.source_spinner);
-        mSourceSpinner.setSelection(1);
+        //mSourceSpinner.setSelection(1);
         mTargetSpinner = view.findViewById(R.id.target_spinner);
-        mTargetSpinner.setSelection(0);
+        //mTargetSpinner.setSelection(0);
+        List<String> langlist =  TranslateAPI.getValueList(mLangs);
+        NewDictionaryFragment.LangAdapter mLangAdapter = new NewDictionaryFragment.LangAdapter(getActivity(),langlist);
+        mSourceSpinner.setAdapter(mLangAdapter);
+        mTargetSpinner.setAdapter(mLangAdapter);
         mSwapButton = view.findViewById(R.id.swap_button);
         mSwapButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -203,7 +216,7 @@ public class MainFragment extends Fragment implements VocalizerListener {
     }
 
     private void updateUI() {
-        mWordList = mHelper.getAllWords();
+        //mWordList = mWordProvider.getAllWords();
         if(mAdapter==null){
             mAdapter = new WordsAdapter(mWordList);
             mRecyclerView.setAdapter(mAdapter);

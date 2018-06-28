@@ -22,7 +22,8 @@
     <string name="source_hint">Studied</string>
     <string name="target_hint">Native</string>
     <string name="internet_necessity">You must have an Internet connection</string>
-    <string name="Dictionary_num">Dictionary #</string>
+    <string name="dictionary_num">Dictionary #</string>
     <string name="enter_name">Enter the name of the dictionary</string>
+    <string name="busy_name">A dictionary with this name already exists</string>
 
 </resources>

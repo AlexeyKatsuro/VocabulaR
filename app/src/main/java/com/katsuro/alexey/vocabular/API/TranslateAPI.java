@@ -28,6 +28,8 @@ public class TranslateAPI {
     public static final String TAG = TranslateAPI.class.getSimpleName();
     private static final String API_KEY = API_KEYS.TRANSlATE;
 
+
+
     public class Codes {
 
         public static final int SUCCESS = 200;
@@ -118,6 +120,10 @@ public class TranslateAPI {
         }
 
         return langList;
+    }
+
+    public static boolean isDirectionExists(List<String> directions, String direction) {
+        return directions.indexOf(direction)>=0 ? true : false;
     }
 
     public byte[] getUrlBytes(String urlSpec) throws IOException {
