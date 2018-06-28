@@ -6,6 +6,18 @@ package com.katsuro.alexey.vocabular.DataBase;
 
 public class DBSchema {
 
+    public static final class DictionariesTable{
+        public static final String NAME = "Dictionaries";
+
+        public static final class Cols {
+
+            public static final String DICTIONARY_NAME = "dictionary_name";
+            public static final String SOURCE_KEY_LANG = "source_key_lang";
+            public static final String TARGET_KEY_LANG = "target_key_lang";
+            public static final String DATE = "date";
+        }
+    }
+
     public static final class WordsTable {
         public static final String NAME = "words";
 

@@ -20,5 +20,7 @@
     <string name="source_hint">Изучаемый</string>
     <string name="target_hint">Родной</string>
     <string name="internet_necessity">Необходимо  установить интернет соединение</string>
+    <string name="Dictionary_num">Словарь #</string>
+    <string name="enter_name">Введите имя словаря</string>
 
 </resources>

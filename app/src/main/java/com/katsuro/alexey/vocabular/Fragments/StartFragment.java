@@ -9,21 +9,24 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.katsuro.alexey.vocabular.API.API_KEYS;
 import com.katsuro.alexey.vocabular.API.TranslateAPI;
+import com.katsuro.alexey.vocabular.Dictionary;
 import com.katsuro.alexey.vocabular.FileWriterReader;
 import com.katsuro.alexey.vocabular.R;
 
@@ -51,12 +54,15 @@ public class StartFragment  extends Fragment {
     private ProgressBar mDownloadProgressBar;
     private ImageView mArrowImageView;
     private ImageView mReplayImageView;
-
+    private EditText mVocabNameEditText;
+    private FloatingActionButton mCompleteButton;
     private FileWriterReader mFileWriterReader;
+
     private TranslateAPI.LangsResult mLangsAndDirs;
     private String mLangsFilename  = "LangsAndDirs.txt";
     private LangAdapter mLangAdapter;
-    private String mSystemLang;
+    private String mSystemKeyLang;
+    private Dictionary mDictionary;
 
     public static StartFragment newInstance() {
         StartFragment fragment = new StartFragment();
@@ -84,39 +90,53 @@ public class StartFragment  extends Fragment {
         Log.d(TAG,"onCreateView");
         View view = inflater.inflate(R.layout.fragment_start,container,false);
         mTitle = view.findViewById(R.id.title);
+        mVocabNameEditText = view.findViewById(R.id.vocab_name_edit_text);
         mDescription = view.findViewById(R.id.description);
         mSourceSpinner = view.findViewById(R.id.source_lang_spinner);
         mTargetSpinner = view.findViewById(R.id.target_lang_spinner);
         mDownloadProgressBar = view.findViewById(R.id.download_progress);
         mArrowImageView = view.findViewById(R.id.arrow);
         mReplayImageView = view.findViewById(R.id.replay_image_view);
+        mCompleteButton = view.findViewById(R.id.complete_button);
+
+        mCompleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String name = mVocabNameEditText.getText().toString();
+                String sourceLang = String.valueOf(mSourceSpinner.getSelectedItem());
+                String sourceKeyLang = TranslateAPI.getKey(mLangsAndDirs.getLangs(),sourceLang);
+
+                String targetLang = String.valueOf(mTargetSpinner.getSelectedItem());
+                String targetKeyLang = TranslateAPI.getKey(mLangsAndDirs.getLangs(),targetLang);
+
+                mDictionary =  new Dictionary();
+                mDictionary.setName(name);
+                mDictionary.setSourceKeyLang(sourceKeyLang);
+                mDictionary.setTargetKeyLang(targetKeyLang);
+                Toast.makeText(getActivity(),name,Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(),sourceKeyLang,Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(),targetKeyLang,Toast.LENGTH_SHORT).show();
+
+            }
+        });
         Typeface face= Typeface.createFromAsset(getActivity().getAssets(),"fonts/Purisa.ttf");
         mTitle.setTypeface(face);
         mReplayImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(isNetworkAvailable()){
-                    new DownloadLangList().execute(mSystemLang);
-                    mReplayImageView.setVisibility(View.INVISIBLE);
-                    mDescription.setText(R.string.choose_a_direction);
-                }
+                updateUI();
             }
         });
+        String defaultName = getString(R.string.Dictionary_num)+"1";
+        mVocabNameEditText.setText(defaultName);
+        mVocabNameEditText.setHint(defaultName);
 
         updateUI();
 
         return view;
     }
 
-    private List<String> getLangsValues(Map<String, String> langs) {
-        List<String> langList = new ArrayList<>();
 
-        for (String key : langs.keySet()) {
-            langList.add( langs.get(key));
-        }
-
-        return langList;
-    }
 
     private class DownloadLangList extends AsyncTask<String, Void, Boolean> {
 
@@ -149,7 +169,6 @@ public class StartFragment  extends Fragment {
         protected void onPostExecute(Boolean isOk) {
             Log.d(TAG,"onPostExecute");
             mDownloadProgressBar.setVisibility(View.INVISIBLE);
-            mArrowImageView.setVisibility(View.VISIBLE);
             if(isOk){
                 updateUI();
             }
@@ -161,25 +180,31 @@ public class StartFragment  extends Fragment {
     private void updateUI() {
         File root = getActivity().getFilesDir();
         File file = new File(root,mLangsFilename);
+        mSystemKeyLang = Locale.getDefault().getLanguage();
         if(!file.exists()){
-            mSystemLang = Locale.getDefault().getLanguage();
             if(isNetworkAvailable()) {
-                new DownloadLangList().execute(mSystemLang);
+                new DownloadLangList().execute(mSystemKeyLang);
+                mReplayImageView.setVisibility(View.INVISIBLE);
+                mDescription.setText(R.string.choose_a_direction);
             } else {
                 mDescription.setText(R.string.internet_necessity);
                 mArrowImageView.setVisibility(View.INVISIBLE);
+                mCompleteButton.setVisibility(View.INVISIBLE);
                 mReplayImageView.setVisibility(View.VISIBLE);
+
 
             }
         } else {
+            mReplayImageView.setVisibility(View.INVISIBLE);
+            mArrowImageView.setVisibility(View.VISIBLE);
+            mCompleteButton.setVisibility(View.VISIBLE);
             if(mLangAdapter==null) {
                 mLangsAndDirs = loadLangs();
-                List<String> langlist =  getLangsValues(mLangsAndDirs.getLangs());
+                List<String> langlist =  TranslateAPI.getValueList(mLangsAndDirs.getLangs());
                 mLangAdapter = new LangAdapter(getActivity(),langlist);
-                mLangAdapter.setDropDownViewResource(R.layout.lang_dropdown_list_item);
                 mSourceSpinner.setAdapter(mLangAdapter);
                 mTargetSpinner.setAdapter(mLangAdapter);
-                int pos =  langlist.indexOf(mLangsAndDirs.getLangs().get(mSystemLang));
+                int pos =  langlist.indexOf(mLangsAndDirs.getLangs().get(mSystemKeyLang));
                 mTargetSpinner.setSelection(pos);
             }
         }
@@ -211,6 +236,7 @@ public class StartFragment  extends Fragment {
             super(context,0,langList);
             mContext = context;
             mLangList = langList;
+            setDropDownViewResource(R.layout.lang_dropdown_list_item);
         }
 
         @NonNull

@@ -8,12 +8,11 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import com.katsuro.alexey.vocabular.DataBase.DBSchema.WordsTable.Cols;
 import com.katsuro.alexey.vocabular.Word;
 
 import java.util.ArrayList;
 
-import static com.katsuro.alexey.vocabular.DataBase.DBSchema.WordsTable.NAME;
+import static com.katsuro.alexey.vocabular.DataBase.DBSchema.*;
 
 
 /**
@@ -42,12 +41,12 @@ public class VocabDBHelper extends SQLiteOpenHelper {
 
     private void upDateDadabase(SQLiteDatabase db, int oldVersion, int newVersion) {
         if(oldVersion<1){
-            db.execSQL("create table " + NAME +"("+
+            db.execSQL("create table " + WordsTable.NAME +"("+
                     " _id integer primary key autoincrement, " +
-                    Cols.SOURCE_TEXT + ", " +
-                    Cols.TARGET_TEXT + ", " +
-                    Cols.AUDIO_FILE_PATH + ", " +
-                    Cols.DATE + ")"
+                    WordsTable.Cols.SOURCE_TEXT + ", " +
+                    WordsTable.Cols.TARGET_TEXT + ", " +
+                    WordsTable.Cols.AUDIO_FILE_PATH + ", " +
+                    WordsTable.Cols.DATE + ")"
             );
         }
 //        if(oldVerison<2) db.execSQL("ALTER TABLE TABLE_NAME ADD COLUMN COLUMN_NAME TEXT;");
@@ -57,14 +56,15 @@ public class VocabDBHelper extends SQLiteOpenHelper {
         try {
             SQLiteDatabase database = getWritableDatabase();
             ContentValues contentValues = new ContentValues();
-            contentValues.put(Cols.SOURCE_TEXT, word.getSourceText());
-            contentValues.put(Cols.TARGET_TEXT, word.getTargetText());
-            contentValues.put(Cols.AUDIO_FILE_PATH, word.getAudioFilePath());
-            contentValues.put(Cols.DATE, word.getDate().getTime());
-            database.insert(NAME, null, contentValues);
+            contentValues.put(WordsTable.Cols.SOURCE_TEXT, word.getSourceText());
+            contentValues.put(WordsTable.Cols.TARGET_TEXT, word.getTargetText());
+            contentValues.put(WordsTable.Cols.AUDIO_FILE_PATH, word.getAudioFilePath());
+            contentValues.put(WordsTable.Cols.DATE, word.getDate().getTime());
+            database.insert(WordsTable.NAME, null, contentValues);
             database.close();
         } catch (SQLiteException e){
             Log.e(TAG,"addWord Fail|DB Error",e);
+            e.printStackTrace();
         }
 
     }
@@ -72,10 +72,10 @@ public class VocabDBHelper extends SQLiteOpenHelper {
     public Word getWord(int id) {
         try {
             SQLiteDatabase db = this.getReadableDatabase();
-            String[] colums = new String[]{Cols.SOURCE_TEXT, Cols.TARGET_TEXT,
-                    Cols.AUDIO_FILE_PATH, Cols.DATE};
+            String[] colums = new String[]{WordsTable.Cols.SOURCE_TEXT, WordsTable.Cols.TARGET_TEXT,
+                    WordsTable.Cols.AUDIO_FILE_PATH, WordsTable.Cols.DATE};
             Cursor cursor =
-                    db.query(NAME, colums,
+                    db.query(WordsTable.NAME, colums,
                             "_id=?", new String[]{String.valueOf(id)}, null, null, null);
             WordCursorWrapper cursorWrapper = new WordCursorWrapper(cursor);
             if (cursor != null) {
@@ -91,6 +91,7 @@ public class VocabDBHelper extends SQLiteOpenHelper {
 
         } catch (SQLiteException e) {
             Log.e(TAG, "getWord Fail|DB Error", e);
+            e.printStackTrace();
             return null;
         }
 
@@ -99,7 +100,7 @@ public class VocabDBHelper extends SQLiteOpenHelper {
 
     public ArrayList<Word> getAllWords() {
         ArrayList<Word> words = new ArrayList<>();
-        String query = "SELECT * FROM " + NAME;
+        String query = "SELECT * FROM " + WordsTable.NAME;
         try {
             SQLiteDatabase db = this.getReadableDatabase();
             WordCursorWrapper cursor = new WordCursorWrapper(getAllCursor());
@@ -112,16 +113,18 @@ public class VocabDBHelper extends SQLiteOpenHelper {
             return words;
         } catch (SQLiteException e) {
             Log.e(TAG,"getAllSessions Fail|DB Error",e);
+            e.printStackTrace();
             return null;
         }
     }
     public Cursor getAllCursor() {
         try {
             SQLiteDatabase db = this.getReadableDatabase();
-            return db.query(NAME, null, null, null, null, null, "_id " +" DESC");
+            return db.query(WordsTable.NAME, null, null, null, null, null, "_id " +" DESC");
 
         } catch (SQLiteException e) {
             Log.e(TAG,"getAllCursor Fail|DB Error", e);
+            e.printStackTrace();
             return null;
         }
 

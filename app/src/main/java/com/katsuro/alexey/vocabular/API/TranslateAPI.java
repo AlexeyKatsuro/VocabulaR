@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -100,7 +101,7 @@ public class TranslateAPI {
         return response.substring(response.indexOf("lang")+7, response.length()-2);
     }
 
-    public String getKey(Map<String, String> map, String value) {
+    public static String getKey(Map<String, String> map, String value) {
 
         for (String key : map.keySet()) {
             if (map.get(key).equalsIgnoreCase(value)) {
@@ -108,6 +109,15 @@ public class TranslateAPI {
             }
         }
         return null;
+    }
+
+    public static List<String> getValueList(Map<String, String> langs) {
+        List<String> langList = new ArrayList<>();
+        for (String key : langs.keySet()) {
+            langList.add( langs.get(key));
+        }
+
+        return langList;
     }
 
     public byte[] getUrlBytes(String urlSpec) throws IOException {
